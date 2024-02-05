@@ -53,6 +53,7 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 
+
 // add competency
 document.addEventListener("DOMContentLoaded", () => {
   const addCompetencyForm = document.getElementById("addCompetencyForm");
@@ -102,3 +103,116 @@ function confirmDelete(competencyId) {
       });
   }
 }
+
+// learning outcome delete
+function deleteLearningOutcome(outcomeId) {
+  if (confirm("Are you sure you want to delete this learning outcome?")) {
+    fetch(`/delete_learning_outcome/${outcomeId}`, { 
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.status === 'success') {
+        alert(data.message);
+        window.location.reload();
+      } else {
+        throw new Error(data.message);
+      }
+    })
+    .catch(error => console.error('Error deleting learning outcome:', error));
+  }
+}
+
+
+
+function showAddLearningOutcomeModal(competencyId) {
+  // Set competencyId in the hidden input field of the add learning outcome modal
+  document.getElementById('addOutcomeCompetencyId').value = competencyId;
+  // Show the modal
+  var addLearningOutcomeModal = new bootstrap.Modal(document.getElementById('addLearningOutcomeModal'));
+  addLearningOutcomeModal.show();
+}
+// adding learning outccome
+document.addEventListener("DOMContentLoaded", () => {
+    const addLearningOutcomeForm = document.getElementById("addLearningOutcomeForm");
+    addLearningOutcomeForm.addEventListener("submit", function(e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+        fetch("/add_learning_outcome", {
+            method: "POST",
+            body: formData,
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === "success") {
+                alert(data.message); // Show success message
+                window.location.reload(); // Optionally reload the page or update the UI to show the new learning outcome
+            } else {
+                alert(data.message); // Show error message
+            }
+        })
+        .catch(error => {
+            console.error("Error adding learning outcome:", error);
+            alert("An error occurred while adding the learning outcome.");
+        });
+    });
+});
+
+// editing learning outcome
+function editLearningOutcome(outcomeId, competencyId) {
+  fetch(`/get_learning_outcome_details/${outcomeId}`)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      return response.json();
+    })
+    .then(data => {
+      // Set the outcomeId as a data attribute on the form
+      const form = document.getElementById('editLearningOutcomeForm');
+      form.dataset.outcomeId = outcomeId;
+
+      // Populate the form fields with the data fetched
+      document.getElementById('editOutcomeDescription').value = data.description;
+
+      // Show the modal for editing
+      const editModal = new bootstrap.Modal(document.getElementById('editLearningOutcomeModal'));
+      editModal.show();
+    })
+    .catch(error => console.error('Error fetching learning outcome details:', error));
+}
+
+
+document.addEventListener("DOMContentLoaded", () => {
+    const editForm = document.getElementById('editLearningOutcomeForm');
+    if (editForm) {
+        editForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const outcomeId = this.getAttribute('data-outcome-id'); // Ensure this attribute is set correctly
+            const formData = new FormData(this);
+
+            fetch(`/edit_learning_outcome/${outcomeId}`, {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => response.json()) // Expecting JSON response from Flask
+            .then(data => {
+                if (data.status === 'success') {
+                    alert('Learning outcome updated successfully!');
+                    window.location.reload(); // Reload the page to reflect changes
+                } else {
+                    alert(`Error updating learning outcome: ${data.message}`);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+    }
+});
+
