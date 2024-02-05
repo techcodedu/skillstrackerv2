@@ -1,0 +1,28 @@
+<!-- learning_outcomes_modal.html -->
+<div
+  class="modal fade"
+  id="learningOutcomesModal-{{ competency.competency_id }}"
+  tabindex="-1"
+  aria-hidden="true"
+>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">{{ competency.title }} Learning Outcomes</h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <ul>
+          {% for outcome in competency.learning_outcomes %}
+          <li>{{ outcome.description }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
