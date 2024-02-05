@@ -1,0 +1,57 @@
+<!-- student_learning_outcomes_modal.html -->
+<div class="modal fade" id="learningOutcomesModal-{{ student.user_id }}" tabindex="-1"
+    aria-labelledby="learningOutcomesModalLabel-{{ student.user_id }}" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="learningOutcomesModalLabel-{{ student.user_id }}">{{ student.username }}'s
+                    Learning Outcomes</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="updateLearningOutcomesForm-{{ student.user_id }}">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Outcome</th>
+                                <th scope="col">Status</th>
+                                <th scope="col">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for outcome in student.learning_outcomes %}
+                            <tr>
+                                <td>{{ outcome.description }}</td>
+                                <td>
+                                    <!-- Display the current status of each outcome -->
+                                    {{ outcome.status | capitalize }}
+                                </td>
+                                <td>
+                                    <!-- Add checkbox or button to update the status -->
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" value="{{ outcome.outcome_id }}"
+                                            id="outcomeCheck-{{ outcome.outcome_id }}" {% if outcome.status=='completed'
+                                            %}checked{% endif %}
+                                            onchange="updateOutcomeStatus('{{ student.user_id }}', '{{ outcome.outcome_id }}', this.checked);">
+                                        <label class="form-check-label" for="outcomeCheck-{{ outcome.outcome_id }}">
+                                            Mark as Completed
+                                        </label>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="3">No learning outcomes assigned yet.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <!-- Add any additional buttons here -->
+            </div>
+        </div>
+    </div>
+</div>
