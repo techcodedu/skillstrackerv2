@@ -228,6 +228,30 @@ def get_learning_outcome_details(outcome_id):
     else:
         return jsonify({'error': 'Learning outcome not found'}), 404
 
+# leaerning outcome progress report
+@app.route('/manage_student_progress')
+def manage_student_progress():
+    if not session.get('logged_in') or session.get('role') != 'trainer':
+        return redirect(url_for('login'))
+    
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        SELECT users.user_id, users.username,
+        (SELECT COUNT(*) FROM progress 
+         WHERE progress.user_id = users.user_id AND progress.status = 'completed') AS completed_outcomes,
+        (SELECT COUNT(*) FROM learning_outcomes) AS total_outcomes
+        FROM users WHERE role = 'student'
+    """)
+    students = cur.fetchall()
+    for student in students:
+        if student['total_outcomes'] > 0:
+            student['progress_percentage'] = (student['completed_outcomes'] / student['total_outcomes']) * 100
+        else:
+            student['progress_percentage'] = 0
+    cur.close()
+
+    return render_template('manage_student_progress.html', students=students)
+
 # student
 @app.route('/student_dashboard')
 def student_dashboard():
