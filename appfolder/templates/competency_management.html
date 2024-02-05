@@ -20,6 +20,7 @@ SkillsTracker{% endblock %} {% block content %}
   <div class="my-4">
     <h2 class="mb-3">{{ category }} Competencies</h2>
     <div class="table-responsive">
+      {% if competencies %}
       <table class="table table-hover">
         <thead class="table-light">
           <tr>
@@ -59,12 +60,18 @@ SkillsTracker{% endblock %} {% block content %}
               </button>
             </td>
           </tr>
-          {% include 'modals/learning_outcomes_modal.html' %} {% include
-          'modals/edit_competency_modal.html' %}
+          {% include 'modals/learning_outcomes_modal.html' %} 
+          {% include 'modals/edit_competency_modal.html' %}
+          {% include 'modals/add_learning_outcome.html' %}
+          {% include 'modals/edit_competency_modal.html' %}
+          {% include 'modals/edit_learning_outcome.html' %}
           <!-- Include the Add Competency modal outside the loop so it's not repeated -->
           {% endfor %}
         </tbody>
       </table>
+      {% else %}
+      <p>No competencies added yet under {{ category }}.</p>
+      {% endif %}
     </div>
   </div>
   {% endfor %} {% include 'modals/add_new_competencies_modal.html' %}

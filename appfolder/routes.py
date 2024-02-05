@@ -141,17 +141,92 @@ def update_competency(competency_id):
 def delete_competency(competency_id):
     try:
         cur = mysql.connection.cursor()
-        # Before deleting competency, ensure that all related learning outcomes are also deleted
+        # First, delete any progress records associated with learning outcomes of this competency
+        cur.execute("""
+            DELETE progress 
+            FROM progress
+            JOIN learning_outcomes ON progress.outcome_id = learning_outcomes.outcome_id
+            WHERE learning_outcomes.competency_id = %s
+        """, (competency_id,))
+        # Then, delete the learning outcomes associated with this competency
         cur.execute("DELETE FROM learning_outcomes WHERE competency_id = %s", (competency_id,))
+        # Finally, delete the competency itself
         cur.execute("DELETE FROM competencies WHERE competency_id = %s", (competency_id,))
         mysql.connection.commit()
         cur.close()
         flash('Competency deleted successfully!', 'success')
     except Exception as e:
-        flash(str(e), 'danger')
-    
-    return redirect(url_for('competency_management',))
+        flash('Error deleting competency: ' + str(e), 'danger')
+    return redirect(url_for('competency_management'))
 
+
+# learning outcome (add)
+@app.route('/add_learning_outcome', methods=['POST'])
+def add_learning_outcome():
+    competency_id = request.form.get('competency_id')
+    description = request.form.get('description')
+    
+    if not competency_id or not description:
+        return jsonify({'status': 'error', 'message': 'Competency ID and description are required.'}), 400
+    
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute("INSERT INTO learning_outcomes (competency_id, description) VALUES (%s, %s)", (competency_id, description))
+        mysql.connection.commit()
+        cur.close()
+        return jsonify({'status': 'success', 'message': 'Learning outcome added successfully!'}), 200
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': 'Error adding learning outcome: ' + str(e)}), 500
+
+
+# learning outcome (edit)
+@app.route('/edit_learning_outcome/<int:outcome_id>', methods=['POST'])
+def edit_learning_outcome(outcome_id):
+    description = request.form.get('description')
+
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute("""
+            UPDATE learning_outcomes
+            SET description = %s
+            WHERE outcome_id = %s
+        """, (description, outcome_id))
+        mysql.connection.commit()
+        cur.close()
+
+        return jsonify({'status': 'success', 'message': 'Learning outcome updated successfully!'})
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': 'Error updating learning outcome: ' + str(e)}), 500
+
+
+# learning outcocme (delete)
+@app.route('/delete_learning_outcome/<int:outcome_id>', methods=['POST'])
+def delete_learning_outcome(outcome_id):
+    try:
+        cur = mysql.connection.cursor()
+        # First, delete any progress records referencing this learning outcome
+        cur.execute("DELETE FROM progress WHERE outcome_id = %s", (outcome_id,))
+        # Then, delete the learning outcome itself
+        cur.execute("DELETE FROM learning_outcomes WHERE outcome_id = %s", (outcome_id,))
+        mysql.connection.commit()
+        cur.close()
+        # Since this is an AJAX call, return a success message in JSON format
+        return jsonify({'status': 'success', 'message': 'Learning outcome deleted successfully!'}), 200
+    except Exception as e:
+        # Log the error and return an error message in JSON format
+        print("Error deleting learning outcome:", e)
+        return jsonify({'status': 'error', 'message': 'Error deleting learning outcome: ' + str(e)}), 500
+
+ # learning outcome from editing
+@app.route('/get_learning_outcome_details/<int:outcome_id>')
+def get_learning_outcome_details(outcome_id):
+    cur = mysql.connection.cursor()
+    result = cur.execute("SELECT * FROM learning_outcomes WHERE outcome_id = %s", [outcome_id])
+    if result > 0:
+        outcome = cur.fetchone()
+        return jsonify(outcome)
+    else:
+        return jsonify({'error': 'Learning outcome not found'}), 404
 
 # student
 @app.route('/student_dashboard')
